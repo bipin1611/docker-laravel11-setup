@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  php:
+    image: docker4laravel-php:latest
+    build: 
+      context: .
+    volumes:
+      - ./.env:/var/www/html/.env
+    networks:
+          - laravel_network
+
+  web:
+    image: docker4laravel-nginx:latest
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - .docker/nginx/nginx_template_local.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    networks:
+          - laravel_network
+
+  db:
+    image: mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+          - laravel_network
+
+  node:
+    image: node
+    user: node
+    working_dir: /assets
+    volumes:
+      - ./:/assets
+    command: npm run dev
+    networks:
+      - laravel_network
+
+
+  redis:
+    image: redis
+    volumes:
+      - redisdata:/data
+    networks:
+          - laravel_network
+
+
+volumes:
+  mysqldata:
+  redisdata:
+
+networks:
+  laravel_network:
